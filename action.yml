@@ -1,5 +1,5 @@
 name: Install Verilator
-description: Install a Verilator release or nightly, building from source when no binary is available.
+description: Install a Verilator release, nightly, or master, building from source when no binary is available.
 author: ktbarrett
 branding:
   icon: cpu
@@ -7,7 +7,7 @@ branding:
 
 inputs:
   version:
-    description: Verilator version (for example, v5.048 or 5.048), or nightly
+    description: Verilator version (for example, v5.048 or 5.048), nightly, or master
     required: true
   token:
     description: GitHub token used for metadata and downloads
