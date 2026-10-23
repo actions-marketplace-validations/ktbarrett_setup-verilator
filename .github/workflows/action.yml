@@ -31,6 +31,9 @@ jobs:
           - runner: ubuntu-26.04
             version: '5.046'
             force-source: 'false'
+          - runner: ubuntu-26.04
+            version: master
+            force-source: 'false'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     steps:
@@ -51,7 +54,7 @@ jobs:
           SOURCE_SHA: ${{ steps.verilator.outputs.source-sha }}
           INSTALLED_PATH: ${{ steps.verilator.outputs.path }}
           BUILT_FROM_SOURCE: ${{ steps.verilator.outputs.built-from-source }}
-          EXPECT_SOURCE: ${{ matrix.force-source == 'true' || matrix.version == '5.046' }}
+          EXPECT_SOURCE: ${{ matrix.force-source == 'true' || matrix.version == '5.046' || matrix.version == 'master' }}
         run: |
           test "$(command -v verilator)" = "$INSTALLED_PATH/bin/verilator"
           verilator --version | grep -F "$SOURCE_SHA"

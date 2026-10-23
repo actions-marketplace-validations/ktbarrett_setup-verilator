@@ -5,6 +5,8 @@ import re
 RELEASE_REPOSITORY = "ktbarrett/verilator-builds"
 UPSTREAM_REPOSITORY = "verilator/verilator"
 NIGHTLY_BRANCH = "master"
+# Requests that follow the upstream development branch instead of a release tag.
+BRANCH_VERSIONS = ("nightly", "master")
 PLATFORMS = (
     "linux-x86_64",
     "linux-aarch64",

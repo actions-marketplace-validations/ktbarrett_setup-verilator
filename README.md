@@ -40,7 +40,7 @@ but private runners running similar operating systems should also work.
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `version` | Required | An upstream release version, with optional `v`, or `nightly` |
+| `version` | Required | An upstream release version, with optional `v`, `nightly`, or `master` |
 | `token` | `${{ github.token }}` | Token for GitHub metadata and downloads; no write permission needed |
 | `install-dependencies` | `'true'` | Install missing runtime tools and source build dependencies |
 | `force-source` | `'false'` | Always build from source; `nightly` builds current upstream `master` |

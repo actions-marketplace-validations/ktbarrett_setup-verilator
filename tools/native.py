@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import sys
 
-from .config import version
+from .config import BRANCH_VERSIONS, version
 from .upstream import source_version
 
 
@@ -57,7 +57,7 @@ def build_native(source, prefix, requested, sha, jobs, env):
     if any(c.isspace() for path in (source, prefix) for c in str(path)):
         raise ValueError("Verilator source and installation paths cannot contain whitespace")
     actual = source_version((source / "configure.ac").read_text())
-    if requested != "nightly" and actual != requested:
+    if requested not in BRANCH_VERSIONS and actual != requested:
         raise ValueError(f"Requested {requested}, but upstream source declares {actual}")
     env = {**env, "VERILATOR_SRC_VERSION": f"{actual} ({sha})", "CCACHE_DISABLE": "1"}
     if (

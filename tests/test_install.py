@@ -9,7 +9,7 @@ import requests
 from github import GithubException
 from responses.matchers import query_param_matcher
 
-from tools.config import RELEASE_REPOSITORY
+from tools.config import BRANCH_VERSIONS, RELEASE_REPOSITORY
 from tools.github import GitHub
 from tools.install import build_source, install, main, requested_version, runner_platform
 from tools.releases import MARKER
@@ -81,7 +81,7 @@ def installer(tmp_path, monkeypatch, launcher, state, build_environment):
     root.mkdir()
 
     def build(api, requested, work, prefix, platform, jobs, install_dependencies):
-        actual = "v5.049" if requested == "nightly" else requested
+        actual = "v5.049" if requested in BRANCH_VERSIONS else requested
         launcher(prefix, actual, state["sha"])
         return actual, state["sha"]
 
@@ -99,12 +99,13 @@ def test_normalize_versions(value):
     assert requested_version(value) == "v5.048"
 
 
-def test_nightly_version():
-    assert requested_version("nightly") == "nightly"
+@pytest.mark.parametrize("value", ["nightly", "master"])
+def test_branch_versions(value):
+    assert requested_version(value) == value
 
 
 @pytest.mark.parametrize(
-    "value", ["", "latest", "master", "v5", "5.48", "../../etc", "$(id)", "5.048\nx"]
+    "value", ["", "latest", "main", "v5", "5.48", "../../etc", "$(id)", "5.048\nx"]
 )
 def test_reject_refs_and_shell_text(value):
     with pytest.raises(ValueError):
@@ -175,11 +176,14 @@ def test_unavailable_package_falls_back_to_source(make_package, publish, install
     build.assert_called_once()
 
 
-@pytest.mark.parametrize("requested", ["v5.048", "nightly"])
-def test_force_source_bypasses_all_release_requests(installer, http, requested):
+@pytest.mark.parametrize(
+    ("requested", "force_source"), [("v5.048", True), ("nightly", True), ("master", False)]
+)
+def test_source_only_requests_bypass_all_release_requests(installer, http, requested, force_source):
     run, build, _ = installer
-    assert run(requested, force_source=True)["built-from-source"] == "true"
+    assert run(requested, force_source=force_source)["built-from-source"] == "true"
     build.assert_called_once()
+    assert build.call_args.args[1] == requested
     assert len(http.calls) == 0
 
 
@@ -271,7 +275,8 @@ def test_action_exports_outputs_and_keeps_repeated_installations(
 
 
 @pytest.mark.parametrize(
-    "requested,ref", [("v5.046", "refs%2Ftags%2Fv5.046"), ("nightly", "master")]
+    "requested,ref",
+    [("v5.046", "refs%2Ftags%2Fv5.046"), ("nightly", "master"), ("master", "master")],
 )
 def test_source_fetch_pins_tag_or_branch_to_a_commit(
     http, tmp_path, monkeypatch, state, requested, ref, build_environment

@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 
 from .config import (
+    BRANCH_VERSIONS,
     NIGHTLY_BRANCH,
     PLATFORMS,
     RELEASE_REPOSITORY,
@@ -23,11 +24,13 @@ from .releases import published_package
 
 def requested_version(value):
     value = value.strip()
-    if value == "nightly":
+    if value in BRANCH_VERSIONS:
         return value
     tag = value if value.startswith("v") else "v" + value
     if version(tag) is None:
-        raise ValueError("version must be an upstream release such as v5.048 or 5.048, or nightly")
+        raise ValueError(
+            "version must be an upstream release such as v5.048 or 5.048, nightly, or master"
+        )
     return tag
 
 
@@ -56,7 +59,7 @@ def install_package(api, platform, package, work, prefix):
 
 
 def build_source(api, requested, work, prefix, platform, jobs, install_dependencies):
-    ref = NIGHTLY_BRANCH if requested == "nightly" else f"refs/tags/{requested}"
+    ref = NIGHTLY_BRANCH if requested in BRANCH_VERSIONS else f"refs/tags/{requested}"
     sha = api.commit(UPSTREAM_REPOSITORY, ref)
     if not re.fullmatch(r"[0-9a-f]{40}", sha):
         raise ValueError("Upstream returned an invalid commit")
@@ -86,7 +89,9 @@ def install(
             tempfile.TemporaryDirectory(prefix="build-", dir=root) as temp,
         ):
             work = Path(temp)
-            package = None if force_source else published_package(api, requested, platform)
+            # master always builds the current upstream branch; only nightly has packages.
+            source_only = force_source or requested == "master"
+            package = None if source_only else published_package(api, requested, platform)
             result = None
             if package is not None:
                 print(f"Installing {package.state.label} for {platform}", flush=True)
